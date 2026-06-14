@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
       color-scheme: dark;
@@ -24,6 +25,20 @@
       --purple: #a78bfa;
       --danger: #fb7185;
       --shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+    }
+    body.light {
+      color-scheme: light;
+      --bg: #f8fafc;
+      --bg-soft: #e2e8f0;
+      --panel: rgba(255, 255, 255, 0.82);
+      --panel-strong: rgba(255, 255, 255, 0.96);
+      --text: #0f172a;
+      --muted: #475569;
+      --line: rgba(15, 23, 42, 0.14);
+      --shadow: 0 24px 80px rgba(15, 23, 42, 0.12);
+    }
+    body.light header, body.light .chat-card, body.light .card, body.light .panel {
+      backdrop-filter: blur(18px);
     }
 
     * { box-sizing: border-box; }
@@ -74,6 +89,15 @@
     .nav-links { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.94rem; }
     .nav-links a { padding: 9px 12px; border-radius: 999px; }
     .nav-links a:hover { color: var(--text); background: rgba(148, 163, 184, 0.1); }
+    .nav-links button {
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.62);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 800;
+    }
 
     .hero {
       display: grid;
@@ -422,6 +446,25 @@
       padding: 16px;
       background: rgba(2, 6, 23, 0.42);
     }
+    .utility-panel {
+      margin: 0 14px 14px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 14px;
+      background: rgba(2, 6, 23, 0.42);
+    }
+    .utility-panel[hidden] { display: none; }
+    .utility-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+    .utility-grid button {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .utility-grid button:hover { border-color: rgba(34, 197, 94, 0.35); }
     .student-dashboard[hidden] { display: none; }
     .dashboard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .dashboard-grid input, .dashboard-grid textarea {
@@ -568,6 +611,7 @@
         <a href="#chat">AI Chat</a>
         <a href="#features">Engine</a>
         <a href="#roadmap">Pelankan</a>
+        <button id="themeButton" type="button">Light</button>
       </div>
     </nav>
   </header>
@@ -597,6 +641,7 @@
       <div class="chat-handle" aria-label="Kawalan chat">
         <span id="resetChat" title="Reset posisi">⌂</span>
         <span id="toggleTools" title="Tools">⚙</span>
+        <span id="toggleUtility" title="Utility">★</span>
       </div>
       <div class="chat-top">
         <div>
@@ -652,12 +697,25 @@
         </div>
         <div class="dashboard-output" id="dashboardOutput">Isi subjek, nota, dan matlamat untuk dapatkan bantuan belajar.</div>
       </div>
+      <div class="utility-panel" id="utilityPanel" hidden>
+        <strong>Utility AI Sempurna</strong>
+        <div class="utility-grid">
+          <button type="button" id="saveTemplate">Simpan template</button>
+          <button type="button" id="loadTemplate">Muat template</button>
+          <button type="button" id="copyLast">Salin jawapan</button>
+          <button type="button" id="screenshotButton">Screenshot halaman</button>
+          <button type="button" id="exportAll">Eksport semua</button>
+          <button type="button" id="presetStudent">Preset pelajar</button>
+        </div>
+      </div>
       <div class="composer">
         <div class="input-row">
           <textarea id="promptInput" rows="2" placeholder="Minta AI bantu buat music, video, gambar, belajar, menulis, melukis, projek, atau coding..."></textarea>
           <button class="send" id="sendButton" type="button">Hantar</button>
         </div>
         <div class="quick" aria-label="Cadangan soalan">
+          <button type="button">Preset pelajar</button>
+          <button type="button">Salin jawapan</button>
           <button type="button">Pelankan belajar</button>
           <button type="button">Buat kuiz</button>
           <button type="button">Flashcards</button>
@@ -705,6 +763,10 @@
         <article class="card">
           <h3>Student dashboard</h3>
           <p>Pelan belajar, kuiz, flashcards, mode fokus, dan eksport portfolio untuk pelajar.</p>
+        </article>
+        <article class="card">
+          <h3>Utility sempurna</h3>
+          <p>Tema, simpan template, salin jawapan, screenshot, eksport semua, dan preset pelajar.</p>
         </article>
       </div>
     </section>
@@ -791,6 +853,15 @@
     const makeFlashcards = document.getElementById('makeFlashcards');
     const focusTimer = document.getElementById('focusTimer');
     const portfolioExport = document.getElementById('portfolioExport');
+    const themeButton = document.getElementById('themeButton');
+    const toggleUtility = document.getElementById('toggleUtility');
+    const utilityPanel = document.getElementById('utilityPanel');
+    const saveTemplate = document.getElementById('saveTemplate');
+    const loadTemplate = document.getElementById('loadTemplate');
+    const copyLast = document.getElementById('copyLast');
+    const screenshotButton = document.getElementById('screenshotButton');
+    const exportAll = document.getElementById('exportAll');
+    const presetStudent = document.getElementById('presetStudent');
 
     document.getElementById('year').textContent = new Date().getFullYear();
 
@@ -1126,6 +1197,106 @@
       });
     }
 
+    function setupUtilityPanel() {
+      themeButton.addEventListener('click', () => {
+        document.body.classList.toggle('light');
+        const isLight = document.body.classList.contains('light');
+        themeButton.textContent = isLight ? 'Dark' : 'Light';
+        localStorage.setItem('tukuk-theme', isLight ? 'light' : 'dark');
+      });
+
+      const savedTheme = localStorage.getItem('tukuk-theme');
+      if (savedTheme === 'light') {
+        document.body.classList.add('light');
+        themeButton.textContent = 'Dark';
+      }
+
+      toggleUtility.addEventListener('click', () => {
+        utilityPanel.hidden = !utilityPanel.hidden;
+      });
+
+      saveTemplate.addEventListener('click', () => {
+        const template = promptInput.value.trim() || getLastAiText();
+        if (!template) {
+          showToast('Tiada template untuk disimpan');
+          return;
+        }
+        localStorage.setItem('tukuk-ai-template', template);
+        showToast('Template disimpan');
+      });
+
+      loadTemplate.addEventListener('click', () => {
+        const template = localStorage.getItem('tukuk-ai-template');
+        if (!template) {
+          showToast('Tiada template disimpan');
+          return;
+        }
+        promptInput.value = template;
+        promptInput.focus();
+        showToast('Template dimuatkan');
+      });
+
+      copyLast.addEventListener('click', async () => {
+        const text = getLastAiText();
+        if (!text) {
+          showToast('Tiada jawapan untuk disalin');
+          return;
+        }
+        await navigator.clipboard.writeText(text);
+        showToast('Jawapan disalin');
+      });
+
+      screenshotButton.addEventListener('click', async () => {
+        try {
+          const canvas = await html2canvasCapture();
+          const link = document.createElement('a');
+          link.download = 'tukuk-ai-screenshot.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          showToast('Screenshot dimuat turun');
+        } catch (error) {
+          showToast('Screenshot tidak disokong browser ini');
+        }
+      });
+
+      exportAll.addEventListener('click', () => {
+        const text = Array.from(document.querySelectorAll('body')).map((el) => el.innerText).join('\n');
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'tukuk-ai-export.txt';
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast('Semua output dieksport');
+      });
+
+      presetStudent.addEventListener('click', () => {
+        promptInput.value = 'Saya pelajar. Bantu saya buat pelan belajar, kuiz, flashcards, app web percuma, dan portfolio dalam satu output.';
+        showToast('Preset pelajar dimasukkan');
+      });
+    }
+
+    async function html2canvasCapture() {
+      if (window.html2canvas) {
+        return window.html2canvas(document.body);
+      }
+      const canvas = document.createElement('canvas');
+      const width = Math.min(window.innerWidth, 1440);
+      const height = Math.min(window.innerHeight, 1800);
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d');
+      context.fillStyle = '#020617';
+      context.fillRect(0, 0, width, height);
+      context.fillStyle = '#e5e7eb';
+      context.font = '700 28px Inter, sans-serif';
+      context.fillText('Tukuk AI Studio', 40, 70);
+      context.font = '18px Inter, sans-serif';
+      context.fillText('Screenshot fallback: halaman disimpan sebagai nota teks dan media.', 40, 110);
+      return canvas;
+    }
+
     async function runMediaEngine(prompt) {
       const lower = prompt.toLowerCase();
       const title = extractTopic(prompt, 'AI media');
@@ -1172,7 +1343,10 @@
 
       let output = '';
 
-      if (lower.includes('pelan belajar') || lower.includes('kuiz') || lower.includes('flashcard') || lower.includes('mode fokus') || lower.includes('portfolio pelajar') || lower.includes('dashboard pelajar')) {
+      if (lower.includes('screenshot') || lower.includes('salin') || lower.includes('simpan template') || lower.includes('preset') || lower.includes('utility')) {
+        utilityPanel.hidden = false;
+        output = `🧰 Utility Panel dibuka. Anda boleh simpan template, salin jawapan, screenshot, eksport semua output, tukar tema, dan guna preset pelajar.`;
+      } else if (lower.includes('pelan belajar') || lower.includes('kuiz') || lower.includes('flashcard') || lower.includes('mode fokus') || lower.includes('portfolio pelajar') || lower.includes('dashboard pelajar')) {
         openStudentDashboard();
         output = `🎓 Student Dashboard dibuka. Isi subjek, nota, tarikh, dan matlamat, kemudian tekan butang yang sesuai.`;
       } else if (lower.includes('cari alat') || lower.includes('percuma') || lower.includes('open source') || lower.includes('opensource')) output = buildFreeTools(topic);
@@ -1517,6 +1691,9 @@ btn.addEventListener('click',()=>{
         if (button.textContent.includes('Pelankan') || button.textContent.includes('kuiz') || button.textContent.includes('Flashcards')) {
           openStudentDashboard();
         }
+        if (button.textContent.includes('Preset') || button.textContent.includes('Salin')) {
+          utilityPanel.hidden = false;
+        }
         promptInput.focus();
         showToast('Engine dipilih');
       });
@@ -1530,6 +1707,7 @@ btn.addEventListener('click',()=>{
     setupDraggableChat();
     setupOpenSourceTools();
     setupStudentDashboard();
+    setupUtilityPanel();
     loadChat();
     addMessage(greetings[Math.floor(Math.random() * greetings.length)], 'ai');
   </script>
